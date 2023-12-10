@@ -17,6 +17,8 @@ return new class extends Migration
             $table->bigInteger('user_id')->nullable();
             $table->string('role')->nullable();
             $table->timestamps();
+
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
         });
         Artisan::call('db:seed', array('--class' => 'UserRoleSeeder'));
     }
