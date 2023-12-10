@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\SignController;
+use App\Http\Controllers\VehicleListController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -13,7 +15,17 @@ use Illuminate\Support\Facades\Route;
 | be assigned to the "api" middleware group. Make something great!
 |
 */
+Route::post('/login', [SignController::class, 'login']);
+Route::group(['middleware' => ['auth:sanctum']], function () {
+    //Vehicle List
+    Route::prefix('vehicle-list')->group(function(){
+        Route::post('/', [VehicleListController::class, 'index']);
+        Route::post('/store', [VehicleListController::class, 'store']);
+        Route::get('/{id}', [VehicleListController::class, 'show']);
+        Route::patch('/{id}', [VehicleListController::class, 'update']);
+        Route::delete('/{id}', [VehicleListController::class, 'destroy']);
+    });
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+    //Logout
+    Route::post('/logout', [SignController::class, 'logout']);
 });
