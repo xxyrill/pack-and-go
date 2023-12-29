@@ -26,7 +26,10 @@ class User extends Authenticatable
         'email',
         'password',
         'user_name',
-        'type'
+        'type',
+        'contact_number', 
+        'gender',
+        'new'
     ];
 
     /**
@@ -48,4 +51,14 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    public function userRole() {
+        return $this->hasOne(UserRole::class, 'user_id', 'id');
+    }
+    public function userDriver() {
+        return $this->hasOne(UserDriverDetails::class, 'user_id', 'id');
+    }
+    public function userBusiness() {
+        return $this->hasOne(UserBusinessDetails::class, 'user_id', 'id');
+    }
 }

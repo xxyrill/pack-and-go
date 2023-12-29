@@ -20,6 +20,6 @@ class UserBusinessDetails extends Model
         'business_permit_number',
         'business_tourism_number',
         'business_contact_person',
-        'business_conact_person_number'
+        'business_contact_person_number'
     ];
 }

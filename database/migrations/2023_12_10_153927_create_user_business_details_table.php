@@ -23,7 +23,7 @@ return new class extends Migration
             $table->string('business_permit_number')->nullable();
             $table->string('business_tourism_number')->nullable();
             $table->text('business_contact_person')->nullable();
-            $table->string('business_conact_person_number')->nullable();
+            $table->string('business_contact_person_number')->nullable();
             $table->timestamps();
             $table->softDeletes();
 
