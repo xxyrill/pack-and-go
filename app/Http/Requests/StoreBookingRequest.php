@@ -23,8 +23,10 @@ class StoreBookingRequest extends FormRequest
     {
         return [
             'vehicle_list_id' => 'required|exists:vehicle_lists,id',
+            'pick_up_location' => 'required|string',
             'pick_up_longitude' => 'required|numeric',
             'pick_up_latitude' => 'required|numeric',
+            'drop_off_location' => 'required|string',
             'drop_off_longitude' => 'required|numeric',
             'drop_off_latitude' => 'required|numeric',
             'pickup_house_information' => 'required',

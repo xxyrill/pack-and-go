@@ -29,7 +29,9 @@ class User extends Authenticatable
         'type',
         'contact_number', 
         'gender',
-        'new'
+        'new',
+        'profile_picture_path',
+        'birth_date'
     ];
 
     /**

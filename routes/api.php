@@ -1,9 +1,14 @@
 <?php
 
 use App\Http\Controllers\BookingController;
+use App\Http\Controllers\MailingController;
+use App\Http\Controllers\MessagingController;
 use App\Http\Controllers\OtpController;
 use App\Http\Controllers\SignController;
+use App\Http\Controllers\SMSController;
+use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\UserVehiclesController;
 use App\Http\Controllers\VehicleListController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -20,9 +25,37 @@ use Illuminate\Support\Facades\Route;
 */
 Route::post('/login', [SignController::class, 'login']);
 Route::post('/user-registration', [UserController::class, 'store']);
+Route::post('/verify-feilds', [UserController::class, 'verifyFields']);
 Route::post('/vehicle-dropdown', [VehicleListController::class, 'index']);
+Route::post('/send-otp', [SMSController::class, 'sendOtp']);
+Route::post('/verify', [SMSController::class, 'verifyOtp']);
 
 Route::group(['middleware' => ['auth:sanctum']], function () {
+    Route::post('/send-mail', [MailingController::class, 'sendRescheduleBooking']);
+    Route::post('/send-otp-mail', [MailingController::class, 'changeEmail']);
+    Route::post('/send-otp-contact-number', [SMSController::class, 'sendOtpUpdateContactNumber']);
+    //User
+    Route::prefix('user')->group(function(){
+        Route::post('/get', [UserController::class, 'getUserData']);
+        Route::get('/subscription', [UserController::class, 'getUserSubscription']);
+        Route::patch('/{id}', [UserController::class, 'update']);
+        Route::post('/save-license-file', [UserController::class, 'saveDriverLicensePhoto']);
+        Route::post('/update/email', [UserController::class, 'updateEmail']);
+        Route::post('/update/contact-number', [UserController::class, 'updateContactNumber']);
+        Route::post('/check/password', [UserController::class, 'checkAuthentication']);
+        Route::post('/update/password', [UserController::class, 'updatePassword']);
+        Route::post('/update-profile-picture', [UserController::class, 'updateProfilePicture']);
+        Route::post('/rate', [UserController::class, 'rateService']);
+    });
+
+    //User Vehicle
+    Route::prefix('user-vehicle')->group(function(){
+        Route::post('/', [UserVehiclesController::class, 'index']);
+        Route::post('/store', [UserVehiclesController::class, 'store']);
+        Route::patch('/{id}', [UserVehiclesController::class, 'update']);
+        Route::delete('/{id}', [UserVehiclesController::class, 'delete']);
+    });
+
     //Vehicle List
     Route::prefix('vehicle-list')->group(function(){
         Route::post('/', [VehicleListController::class, 'index']);
@@ -32,12 +65,32 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::delete('/{id}', [VehicleListController::class, 'destroy']);
     });
 
-    //Vehicle List
+    //Booking
     Route::prefix('booking')->group(function(){
         Route::post('/', [BookingController::class, 'index']);
         Route::post('/store', [BookingController::class, 'store']);
+        Route::patch('/update/{id}', [BookingController::class, 'update']);
+        Route::post('/reschedule', [BookingController::class, 'bookingReschedule']);
+        Route::post('/history', [BookingController::class, 'storeHistory']);
+        Route::post('/canceled', [BookingController::class, 'storeCanceledBooking']);
+        Route::post('/price', [BookingController::class, 'storeBookingPrice']);
     });
 
+    //Chats
+    Route::prefix('chat')->group(function(){
+        Route::post('/chatroom/{id}', [MessagingController::class, 'createChatRoom']);
+        Route::post('/new', [MessagingController::class, 'newMessage']);
+        Route::post('/get', [MessagingController::class, 'getMessage']);
+        Route::post('/chatrooms', [MessagingController::class, 'getChatRooms']);
+        Route::post('/notif/delete', [MessagingController::class, 'deleteNotification']);
+    });
+
+    //Chats
+    Route::prefix('subscription')->group(function(){
+        Route::post('/', [SubscriptionController::class, 'index']);
+        Route::post('/store', [SubscriptionController::class, 'store']);
+    });
+    
     //Logout
     Route::post('/logout', [SignController::class, 'logout']);
 });

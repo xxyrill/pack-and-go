@@ -21,7 +21,12 @@ class SignController extends Controller
         }else{
             $user = Auth::user();
             $name = 'user-'.$user->id.'-token';
-            return response(json_encode($user->createToken($name)->plainTextToken));
+            $return = [
+                'token' => $user->createToken($name)->plainTextToken,
+                'type' => $user->type,
+                'id' => $user->id
+            ];
+            return response($return);
         }
     }
     public function logout(Request $request){

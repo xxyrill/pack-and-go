@@ -31,6 +31,26 @@ class Booking extends Model
         'alt_email',
         'price',
         'status',
-        'order_number'
+        'order_number',
+        'pick_up_location',
+        'drop_off_location'
     ];
+    public function driver() {
+        return $this->hasOne(User::class, 'id', 'user_driver_id');
+    }
+    public function customer() {
+        return $this->hasOne(User::class, 'id', 'user_id');
+    }
+    public function vehicleType() {
+        return $this->hasOne(VehicleList::class, 'id', 'vehicle_list_id');
+    }
+    public function dates() {
+        return $this->hasMany(BookingDate::class, 'booking_id', 'id');
+    }
+    public function bookingRequestPrice() {
+        return $this->hasOne(BookingAgreedPrice::class, 'booking_id', 'id')->latest();
+    }
+    public function bookingHistory() {
+        return $this->hasMany(BookingHistory::class, 'booking_id', 'id');
+    }
 }
