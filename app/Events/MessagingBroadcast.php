@@ -18,13 +18,17 @@ class MessagingBroadcast implements ShouldBroadcast
 
     public $message;
     public $chat_room_id;
+    public $user_id;
+    public $reciever_user_id;
     /**
      * Create a new event instance.
      */
-    public function __construct(string $message, string $chat_room_id)
+    public function __construct(string $user_id, string $message, string $chat_room_id, string $reciever_user_id)
     {
         $this->message = $message;
         $this->chat_room_id = $chat_room_id;
+        $this->user_id = $user_id;
+        $this->reciever_user_id = $reciever_user_id;
     }
 
     /**
@@ -34,10 +38,8 @@ class MessagingBroadcast implements ShouldBroadcast
      */
     public function broadcastOn(): array
     {
-        $val = 'room-'.$this->chat_room_id;
-        // return ['public'];
         return [
-            new Channel($val),
+            new Channel('user_id.'.$this->user_id),
         ];
     }
     

@@ -10,6 +10,7 @@ use App\Models\BookingCancelation;
 use App\Models\BookingDate;
 use App\Models\BookingHistory;
 use App\Models\BookingReschedule;
+use App\Models\UserRating;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -95,7 +96,18 @@ class BookingController extends Controller
                             $q->where('created_at', '>=', $date_range[0])
                               ->where('created_at', '<=', $date_range[1]);
                         })
-                        ->with('vehicleType', 'driver.userBusiness', 'customer', 'dates', 'bookingRequestPrice.driver')
+                        ->with('vehicleType','driver.userBlocked', 'dates', 'bookingRequestPrice.driver')
+                        ->with(['driver' => function($q){
+                            $q->with('userBusiness')
+                              ->with(['userBlocked' => function($q){
+                                $q->where('user_id', Auth::id());
+                              }]);
+                        }])
+                        ->with(['customer' => function($q){
+                            $q->with(['userBlocked' => function($q){
+                                $q->where('user_id', Auth::id());
+                              }]);
+                        }])
                         ->with(['bookingHistory' => function($q) {
                             $q->orderBy('created_at', 'desc');
                         }]);
