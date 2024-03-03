@@ -31,7 +31,6 @@ class BookingController extends Controller
         $sort_by = ($request['sort_by'] != '' || $request['sort_by'] != null ) ? $request['sort_by'] : 'desc';
         $user = Auth::user()->load('userRole');
         $user_vehicles = UserVehicles::where('user_id', $user->id)->pluck('vehicle_list_id')->toArray();
-        return $booking_dates;
         $data = Booking::when($user->userRole->role == 'driver', function($q) use($user, $search, $user_vehicles){
                             $q->where(function($qu) use($user, $user_vehicles) {
                                 $qu->whereIn('vehicle_list_id', $user_vehicles)
