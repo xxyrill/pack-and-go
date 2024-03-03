@@ -10,6 +10,8 @@ use App\Models\BookingCancelation;
 use App\Models\BookingDate;
 use App\Models\BookingHistory;
 use App\Models\BookingReschedule;
+use App\Models\User;
+use App\Models\UserVehicles;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -28,10 +30,40 @@ class BookingController extends Controller
         $order_by = ($request['order_by'] != '' || $request['order_by'] != null ) ? $request['order_by'] : 'id';
         $sort_by = ($request['sort_by'] != '' || $request['sort_by'] != null ) ? $request['sort_by'] : 'desc';
         $user = Auth::user()->load('userRole');
-        $data = Booking::when($user->userRole->role == 'driver', function($q) use($user, $search){
-                            $q->where(function($qu) use($user){
-                                $qu->whereNull('user_driver_id')
-                                  ->orWhere('user_driver_id', $user->id);
+        $user_vehicles = UserVehicles::where('user_id', $user->id)->pluck('vehicle_list_id')->toArray();
+        return $booking_dates;
+        $data = Booking::when($user->userRole->role == 'driver', function($q) use($user, $search, $user_vehicles){
+                            $q->where(function($qu) use($user, $user_vehicles) {
+                                $qu->whereIn('vehicle_list_id', $user_vehicles)
+                                   ->where(function($q)use($user){
+                                       $q->whereNull('user_driver_id')
+                                         ->orWhere('user_driver_id', $user->id);
+                                   });
+                            })
+                            ->when($search, function($q) use($search){
+                                $q->where(function($q) use($search){
+                                    $terms = explode(' ', $search);
+                                    $q->where(function($q) use($terms) {
+                                        $q->whereHas('customer',function($q) use($terms){
+                                            foreach ($terms as $term) {
+                                                $q->where('first_name', 'ilike', '%' . $term . '%')
+                                                    ->orWhere('last_name', 'ilike', '%' . $term . '%');
+                                            }
+                                        });
+                                    })
+                                    ->orWhere('order_number', $search)
+                                    ->orWhere('pick_up_location', 'ilike', '%'.$search.'%')
+                                    ->orWhere('drop_off_location', 'ilike', '%'.$search.'%');
+                                });
+                            });
+                        })
+                        ->when($user->userRole->role == 'business', function($q) use($user, $search, $user_vehicles){
+                            $q->where(function($qu) use($user, $user_vehicles) {
+                                $qu->whereIn('vehicle_list_id', $user_vehicles)
+                                   ->where(function($q)use($user){
+                                       $q->whereNull('user_driver_id')
+                                         ->orWhere('user_driver_id', $user->id);
+                                   });
                             })
                             ->when($search, function($q) use($search){
                                 $q->where(function($q) use($search){
@@ -45,7 +77,9 @@ class BookingController extends Controller
                                             }
                                         });
                                     })
-                                    ->orWhere('order_number', $search);
+                                    ->orWhere('order_number', $search)
+                                    ->orWhere('pick_up_location', 'ilike', '%'.$search.'%')
+                                    ->orWhere('drop_off_location', 'ilike', '%'.$search.'%');
                                 });
                             });
                         })
@@ -63,28 +97,9 @@ class BookingController extends Controller
                                             }
                                         });
                                     })
-                                    ->orWhere('order_number', $search);
-                                });
-                            });
-                        })
-                        ->when($user->userRole->role == 'business', function($q) use($user, $search){
-                            $q->where(function($qu) use($user){
-                                $qu->whereNull('user_driver_id')
-                                  ->orWhere('user_driver_id', $user->id);
-                            })
-                            ->when($search, function($q) use($search){
-                                $q->where(function($q) use($search){
-                                    $terms = explode(' ', $search);
-                    
-                                    $q->where(function($q) use($terms) {
-                                        $q->whereHas('customer',function($q) use($terms){
-                                            foreach ($terms as $term) {
-                                                $q->where('first_name', 'ilike', '%' . $term . '%')
-                                                    ->orWhere('last_name', 'ilike', '%' . $term . '%');
-                                            }
-                                        });
-                                    })
-                                    ->orWhere('order_number', $search);
+                                    ->orWhere('order_number', $search)
+                                    ->orWhere('pick_up_location', 'ilike', '%'.$search.'%')
+                                    ->orWhere('drop_off_location', 'ilike', '%'.$search.'%');
                                 });
                             });
                         })
@@ -95,7 +110,7 @@ class BookingController extends Controller
                             $q->where('created_at', '>=', $date_range[0])
                               ->where('created_at', '<=', $date_range[1]);
                         })
-                        ->with('vehicleType', 'driver.userBusiness', 'customer', 'dates', 'bookingRequestPrice.driver')
+                        ->with('vehicleType', 'driver.userBusiness', 'customer', 'dates', 'bookingRequestPrice.driver.userBusiness')
                         ->with(['bookingHistory' => function($q) {
                             $q->orderBy('created_at', 'desc');
                         }]);

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\UserSubscription;
 use App\Models\UserVehicles;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -41,10 +42,25 @@ class UserVehiclesController extends Controller
             'vehicle_list_id.exists' => 'Invalid vehicle type.'
         ]);
         $validate['user_id'] = Auth::id();
-        UserVehicles::create($validate);
-        return response([
-            'message' => 'The information regarding the vehicle has been successfully saved.'
-        ]);
+        $subscription = UserSubscription::where('user_id', Auth::id())->with('subscription')->latest()->first();
+        if($subscription){
+            $count_user_vehicles = UserVehicles::where('user_id', Auth::id())->count();
+            if($subscription->subscription->vehicle_number <= $count_user_vehicles){
+                return response([
+                    'message' => 'Your subscription is for '.$subscription->subscription->vehicle_number.' vehicle only.'
+                ], 400);
+            }else{
+                UserVehicles::create($validate);
+                return response([
+                    'message' => 'The information regarding the vehicle has been successfully saved.'
+                ]);   
+            }
+        }else{
+            return response([
+                'message' => 'Upgrade your ride, subscribe to add a vehicle.'
+            ], 400);
+        }
+        
     }
     public function update(Request $request, $id)
     {

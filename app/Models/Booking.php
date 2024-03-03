@@ -47,6 +47,9 @@ class Booking extends Model
     public function dates() {
         return $this->hasMany(BookingDate::class, 'booking_id', 'id');
     }
+    public function dateLatest() {
+        return $this->belongsTo(BookingDate::class, 'booking_id')->latest();
+    }
     public function bookingRequestPrice() {
         return $this->hasOne(BookingAgreedPrice::class, 'booking_id', 'id')->latest();
     }

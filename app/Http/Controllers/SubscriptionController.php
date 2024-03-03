@@ -42,12 +42,14 @@ class SubscriptionController extends Controller
             'subscription_period' => 'required|integer',
             'price' => 'required|numeric',
             'type' => 'required|in:driver,business',
-            'inclusions' => 'required|array'
+            'inclusions' => 'required|array',
+            'vehicle_number' => 'required|integer'
         ]);
         $data = $subscription->create([
             'subscription_period' => $validate['subscription_period'],
             'price' => $validate['price'],
             'type' => $validate['type'],
+            'vehicle_number' => $validate['vehicle_number'],
             'status' => 'active',
         ]);
         
