@@ -12,7 +12,7 @@ use App\Models\BookingHistory;
 use App\Models\BookingReschedule;
 use App\Models\UserVehicles;
 use App\Models\UserRating;
-use Carbon\Carbon;3
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
