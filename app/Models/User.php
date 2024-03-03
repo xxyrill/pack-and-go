@@ -63,4 +63,7 @@ class User extends Authenticatable
     public function userBusiness() {
         return $this->hasOne(UserBusinessDetails::class, 'user_id', 'id');
     }
+    public function userBlocked() {
+        return $this->hasOne(UserBlock::class, 'user_id', 'id');
+    }
 }

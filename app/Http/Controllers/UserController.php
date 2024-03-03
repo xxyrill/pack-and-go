@@ -3,12 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\UserValidation;
+use App\Models\Booking;
 use App\Models\ContactNumberOtp;
 use App\Models\EmailOtp;
 use App\Models\User;
+use App\Models\UserBlock;
 use App\Models\UserBusinessDetails;
 use App\Models\UserDriverDetails;
 use App\Models\UserRating;
+use App\Models\UserRatingComment;
 use App\Models\UserSubscription;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -316,8 +319,117 @@ class UserController extends Controller
         ]);
         $validate['customer_id'] = Auth::id();
         UserRating::create($validate);
+        Booking::find($validate['booking_id'])->update(['rated' => true]);
         return response([
             'message' => 'Rate saved.'
         ]);
+    }
+    public function userRating(Request $request)
+    {
+        $data = UserRating::where('service_user_id', Auth::id())
+                            ->with('customer','comment.service.userBusiness');
+
+        $details = [
+            'from' =>   $request->skip + 1,
+            'to'   =>   min(($request->skip + $request->take), $data->count()),
+            'total'=>   $data->count()
+        ];
+        $message = ($data->count() == 0) ? "No Results Found" : "Results Found";
+        return response([
+            'data'      => $data->skip($request->skip)
+                                ->take($request->take)
+                                ->orderBy('id','desc')
+                                ->get(),
+            'details'   => $details,
+            'message'   => $message
+        ]);
+    }
+    public function commentRatingStore(Request $request)
+    {
+        $validate = $request->validate([
+            'user_rating_id' => 'required|exists:user_ratings,id',
+            'comment' => 'required|string'
+        ]);
+        $validate['user_id'] = Auth::id();
+
+        UserRatingComment::create($validate);
+
+        return response([
+            'message' => 'comment added'
+        ]);
+    }
+    public function commentRatingUpdate(Request $request)
+    {
+        $validate = $request->validate([
+            'user_rating_comment_id' => 'required|exists:user_rating_comments,id',
+            'comment' => 'required|string'
+        ]);
+
+        UserRatingComment::find($validate['user_rating_comment_id'])
+                            ->update(['comment' => $validate['comment']]);
+
+        return response([
+            'message' => 'Comment updated.'
+        ]);
+    }
+    public function commentRatingDelete($id)
+    {
+        $user_rating_comment = UserRatingComment::find($id);
+        if($user_rating_comment){
+            $user_rating_comment->delete();
+        }else{
+            return response([
+                'message' => 'Error, invalid user rating'
+            ], 400);
+        }
+    }
+    public function numberOfRatings()
+    {
+        $rating = UserRating::where('service_user_id', Auth::id());
+        return response([
+            'total_stars' => $rating->sum('rate'),
+            'rating_numbers' => $rating->count()
+        ]);
+    }
+    public function userBlocked(Request $request)
+    {
+        $validate = $request->validate([
+            'blocked_user' => 'required|exists:users,id',
+            'type' => 'required|in:blocked,unblocked'
+        ]);
+
+        if($validate['type'] == 'blocked'){
+            $user_blocked = UserBlock::withTrashed()
+                                       ->where('user_id', Auth::id())
+                                       ->where('blocked_user_id', $validate['blocked_user']);
+            if($user_blocked->first()){
+                $user_blocked->restore();
+            }else{
+                UserBlock::create(['user_id' => Auth::id(),'blocked_user_id' => $validate['blocked_user']]);
+            }
+            return response([
+                'message' => 'User blocked.'
+            ]);
+        }elseif ($validate['type'] == 'unblocked') {
+            UserBlock::where('user_id', Auth::id())
+                       ->where('blocked_user_id', $validate['blocked_user'])
+                       ->delete();
+            return response([
+                'message' => 'User unblocked.'
+            ]);
+        }
+    }
+    public function blockList(Request $request)
+    {
+        $validate = $request->validate([
+            'user_id' => 'required|exists:users,id'
+        ]);
+
+        $data = UserBlock::where('user_id', Auth::id())->where('blocked_user_id', $validate['user_id'])->first();
+        if($data){
+            return response(1);
+        }else{
+            return response(0);
+        }
     }
 }
