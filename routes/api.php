@@ -46,6 +46,16 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::post('/update/password', [UserController::class, 'updatePassword']);
         Route::post('/update-profile-picture', [UserController::class, 'updateProfilePicture']);
         Route::post('/rate', [UserController::class, 'rateService']);
+        Route::post('/ratings', [UserController::class, 'userRating']);
+        Route::get('/ratings/stars', [UserController::class, 'numberOfRatings']);
+        Route::post('/blocked', [UserController::class, 'userBlocked']);
+        Route::post('/list', [UserController::class, 'blockList']);
+    });
+    //User Vehicle
+    Route::prefix('user-rating-comment')->group(function(){
+        Route::post('/store', [UserController::class, 'commentRatingStore']);
+        Route::post('/update', [UserController::class, 'commentRatingUpdate']);
+        Route::delete('/{id}', [UserController::class, 'commentRatingDelete']);
     });
 
     //User Vehicle

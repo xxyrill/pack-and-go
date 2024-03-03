@@ -16,4 +16,10 @@ class UserRating extends Model
         'rate',
         'additional_comment',
     ];
+    public function customer() {
+        return $this->hasOne(User::class, 'id', 'customer_id');
+    }
+    public function comment() {
+        return $this->hasOne(UserRatingComment::class, 'user_rating_id', 'id')->latest();
+    }
 }

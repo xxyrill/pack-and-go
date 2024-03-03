@@ -33,7 +33,8 @@ class Booking extends Model
         'status',
         'order_number',
         'pick_up_location',
-        'drop_off_location'
+        'drop_off_location',
+        'rated'
     ];
     public function driver() {
         return $this->hasOne(User::class, 'id', 'user_driver_id');

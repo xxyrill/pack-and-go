@@ -35,10 +35,19 @@ class MessagingController extends Controller
         $user = Auth::user()->load('userRole');
         $data = ChatRooms::when($user->userRole->role == 'customer', function($q) use($user){
                                 $q->where('customer_id', $user->id)
-                                  ->with('appointer.userBusiness');
+                                  ->with(['appointer' => function($q){
+                                    $q->with('userBusiness')
+                                      ->with(['userBlocked' => function($q){
+                                        $q->where('blocked_user_id', Auth::id());
+                                      }]);
+                                  }]);
                             }, function($q) use($user) {
                                 $q->where('appointer_id', $user->id)
-                                  ->with('customer');
+                                  ->with(['customer' => function($q){
+                                    $q->with(['userBlocked' => function($q){
+                                        $q->where('blocked_user_id', Auth::id());
+                                    }]);
+                                  }]);
                             })
                             ->has('chats')
                             ->withCount(['chatNotifications' => function($q){
@@ -70,7 +79,7 @@ class MessagingController extends Controller
             'chat_room_id' => $validate['room_id']
         ]);
         try {
-            broadcast(new MessagingBroadcast($message->message, $message->chat_room_id))->toOthers();
+            broadcast(new MessagingBroadcast($validate['reciever_id'], $message->message, $message->chat_room_id, Auth::id()))->toOthers();
             broadcast(new NotificationBroadcast($validate['reciever_id'], $message->chat_room_id, Auth::id()))->toOthers();
             return response(['data' => $message]);
         } catch (\Throwable $th) {
