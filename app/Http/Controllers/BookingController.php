@@ -10,7 +10,6 @@ use App\Models\BookingCancelation;
 use App\Models\BookingDate;
 use App\Models\BookingHistory;
 use App\Models\BookingReschedule;
-use App\Models\User;
 use App\Models\UserVehicles;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
