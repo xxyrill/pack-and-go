@@ -13,7 +13,8 @@ class Subscription extends Model
         'subscription_period',
         'price',
         'status',
-        'type'
+        'type',
+        'vehicle_number'
     ];
     public function subscriptionInclusion() {
         return $this->hasMany(SubscriptionInclusion::class, 'subscription_id', 'id');
