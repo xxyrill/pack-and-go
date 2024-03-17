@@ -20,4 +20,7 @@ class UserVehicles extends Model
     public function vehicle() {
         return $this->hasOne(VehicleList::class, 'id', 'vehicle_list_id');
     }
+    public function user() {
+        return $this->hasOne(User::class, 'id', 'user_id');
+    }
 }

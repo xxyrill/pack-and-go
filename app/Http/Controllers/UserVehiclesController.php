@@ -98,4 +98,28 @@ class UserVehiclesController extends Controller
             ], 400);
         }
     }
+    public function vehicleUserLists(Request $request)
+    {
+        
+        $status = ($request['status'] != '' || $request['status'] != null ) ? $request['status'] : null;
+        $filter_date = ($request['filter_date'] != '' || $request['filter_date'] != null ) ? $request['filter_date'] : null;
+
+        $data = UserVehicles::withTrashed()
+                            ->with('vehicle','user.userBusiness')
+                            ->orderBy('id','desc');
+
+        $details = [
+            'from' =>   $request->skip + 1,
+            'to'   =>   min(($request->skip + $request->take), $data->count()),
+            'total'=>   $data->count()
+        ];
+        $message = ($data->count() == 0) ? "No Results Found" : "Results Found";
+        return response([
+            'data'      => $data->skip($request->skip)
+                                ->take($request->take)
+                                ->get(),
+            'details'   => $details,
+            'message'   => $message
+        ]);
+    }
 }

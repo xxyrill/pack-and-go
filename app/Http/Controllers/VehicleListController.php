@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\UserVehicles;
 use App\Models\VehicleList;
 use Illuminate\Http\Request;
 
