@@ -432,4 +432,30 @@ class UserController extends Controller
             return response(0);
         }
     }
+    public function getCurrentPlant()
+    {
+        $data = UserSubscription::where('user_id', Auth::id())
+                                  ->with('subscription.subscriptionInclusion', 'userSubscriptionPay')
+                                  ->where('status', 'active')
+                                  ->first();
+        return response([
+            'data' => $data
+        ]);
+    }
+    public function subscribePlan(UserSubscription $user_subscription, Request $request)
+    {
+        $request->validate([
+            'subscription_id' => 'required|exists:subscriptions,id'
+        ]);
+        $conditions = $user_subscription->where('user_id', Auth::id());
+        if($conditions->count() > 0){
+            $conditions->update(['status' =>  'inactive']);
+            $conditions->delete();
+        }
+        $user_subscription->create([
+            'subscription_id'       => $request->subscription_id,
+            'user_id'               => Auth::id(),
+            'status'                => 'active'
+        ]);
+    }
 }

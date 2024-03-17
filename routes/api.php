@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\MailingController;
 use App\Http\Controllers\MessagingController;
@@ -50,6 +51,8 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::get('/ratings/stars', [UserController::class, 'numberOfRatings']);
         Route::post('/blocked', [UserController::class, 'userBlocked']);
         Route::post('/list', [UserController::class, 'blockList']);
+        Route::get('/current-plan', [UserController::class, 'getCurrentPlant']);
+        Route::post('/subscribe-plan', [UserController::class, 'subscribePlan']);
     });
     //User Vehicle
     Route::prefix('user-rating-comment')->group(function(){
@@ -64,6 +67,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::post('/store', [UserVehiclesController::class, 'store']);
         Route::patch('/{id}', [UserVehiclesController::class, 'update']);
         Route::delete('/{id}', [UserVehiclesController::class, 'delete']);
+        Route::post('/listing', [UserVehiclesController::class, 'vehicleUserLists']);
     });
 
     //Vehicle List
@@ -99,6 +103,11 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::prefix('subscription')->group(function(){
         Route::post('/', [SubscriptionController::class, 'index']);
         Route::post('/store', [SubscriptionController::class, 'store']);
+    });
+
+    //Dashboards 
+    Route::prefix('dashboard')->group(function(){
+        Route::post('/dash-cards', [AnalyticsController::class, 'dashboard']);
     });
     
     //Logout

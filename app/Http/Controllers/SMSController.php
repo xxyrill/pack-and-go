@@ -27,7 +27,7 @@ class SMSController extends Controller
         if($payload['type'] == 'registration'){
             $message = 'Please use within 5 minutes.';
         }else{
-            $message = "Service request number: {$payload['order_number']}\nDelivery date: {$payload['delivery_date']}\nRoute: {$payload['route']}\nType: {$payload['type']} \n \nIf you agreed to the price, please provide the OTP number below to the driver.\n";
+            $message = "Service request number: {$payload['order_number']}\nIf price agreed, provide OTP to driver.\n";
         }
 
         if($validation){

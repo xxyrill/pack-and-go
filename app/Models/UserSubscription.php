@@ -21,4 +21,7 @@ class UserSubscription extends Model
     public function user() {
         return $this->hasOne(User::class, 'user_id');
     }
+    public function userSubscriptionPay() {
+        return $this->hasOne(UserSubscriptionPay::class, 'user_subscription_id');
+    }
 }
