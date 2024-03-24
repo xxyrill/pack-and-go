@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\UserValidation;
+use App\Mail\ForgotPassword;
 use App\Models\Booking;
 use App\Models\ContactNumberOtp;
 use App\Models\EmailOtp;
+use App\Models\PasswordReset;
 use App\Models\User;
 use App\Models\UserBlock;
 use App\Models\UserBusinessDetails;
@@ -16,6 +18,7 @@ use App\Models\UserSubscription;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 
 class UserController extends Controller
@@ -83,9 +86,24 @@ class UserController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show($id)
     {
-        //
+        $data = User::where('id', $id)
+                        ->withCount('userVehicles')
+                        ->with(['userBlockedReverse' => function($q) {
+                            $q->where('user_id', Auth::id());
+                        }])
+                        ->first();
+        if($data){
+            if ($data->type == 'driver') {
+                $data->load('userDriver');
+            } elseif ($data->type == 'business') {
+                $data->load('userBusiness');
+            }
+            return response(['data' => $data], 200);
+        }else{
+            return response(['message' => 'Not found.'],404);
+        }
     }
 
     /**
@@ -457,5 +475,51 @@ class UserController extends Controller
             'user_id'               => Auth::id(),
             'status'                => 'active'
         ]);
+    }
+    public function forgotPasswordMail(Request $request)
+    {
+        $validate = $request->validate([
+            'email' => 'email|required|exists:users,email'
+        ]);
+        $user = User::where('email', $validate['email'])->first();
+        $password_reset = PasswordReset::create(['email' => $validate['email']]);
+        $password_reset->update(['link' => hash('sha256', $user->id.$password_reset->id.$password_reset->created_at)]);
+
+        $mailData = [
+            'name'      => $user->first_name." ".$user->middle_name." ".$user->last_name,
+            'link'      => env('FE_URL_PRODUCTION').'password-reset/'.$password_reset->link
+        ];
+        try {
+            Mail::to($user->email)->send(new ForgotPassword($mailData));
+            return response([
+                'message' => 'Successfully emailed.'
+            ],200);
+        } catch (\Throwable $th) {
+            return response([
+                'message' => 'Error! Failed to send.'
+            ], 400);
+        }
+    }
+    public function changePassword(Request $request)
+    {
+        $validate = $request->validate([
+            'hash' => 'required|string',
+            'password' => 'required|confirmed'
+        ]);
+
+        $password_reset = PasswordReset::where('link', $validate['hash']);
+        $condition = $password_reset->first();
+        $user = User::where('email', $condition->email);
+        $condition_user = $user->first();
+        if($condition && $condition_user){
+            $password = bcrypt($validate['password']);
+            $user->update(['password' => $password]);
+            $condition->delete();
+            return response('Success',200);
+        }else{
+            return response([
+                'errors' => ['password' => 'Invalid Url.']
+            ],400);
+        }
     }
 }

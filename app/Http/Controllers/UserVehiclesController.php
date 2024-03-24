@@ -103,10 +103,17 @@ class UserVehiclesController extends Controller
         
         $status = ($request['status'] != '' || $request['status'] != null ) ? $request['status'] : null;
         $filter_date = ($request['filter_date'] != '' || $request['filter_date'] != null ) ? $request['filter_date'] : null;
-
-        $data = UserVehicles::withTrashed()
-                            ->with('vehicle','user.userBusiness')
-                            ->orderBy('id','desc');
+        $data = UserVehicles::when($filter_date, function($q) use($filter_date){
+                                $q->whereDate('created_at', '>=', $filter_date[0])
+                                ->whereDate('created_at', '<=', $filter_date[1]);
+                            })
+                            ->when($status === 'inactive', function($q) use($status){
+                                $q->whereNotNull('deleted_at');
+                            })
+                            ->when($status === 'active', function($q) use($status){
+                                $q->whereNull('deleted_at');
+                            })
+                            ->with('vehicle','user.userBusiness');
 
         $details = [
             'from' =>   $request->skip + 1,
@@ -117,6 +124,8 @@ class UserVehiclesController extends Controller
         return response([
             'data'      => $data->skip($request->skip)
                                 ->take($request->take)
+                                ->orderBy('id','desc')
+                                ->withTrashed()
                                 ->get(),
             'details'   => $details,
             'message'   => $message

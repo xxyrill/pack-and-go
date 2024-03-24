@@ -49,4 +49,19 @@ class AnalyticsController extends Controller
             'revenue'   => 0
         ]);
     }
+    public function getTotalRevenue(Request $request)
+    {
+        $year = ($request['year'] != '' || $request['year'] != null ) ? $request['year'] : null;
+        $monthlyData = [];
+        for ($month = 1; $month <= 12; $month++) {
+            $bookings = Booking::where('status', 'completed')
+                            ->whereMonth('created_at', $month)
+                            ->when($year, function($q) use($year){
+                                $q->whereYear('created_at', $year);
+                            })
+                            ->sum('price');
+            $monthlyData[$month] = $bookings;
+        }
+        return response(['data' => $monthlyData]);
+    }
 }
