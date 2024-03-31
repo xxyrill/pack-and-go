@@ -57,6 +57,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::post('/list', [UserController::class, 'blockList']);
         Route::get('/current-plan', [UserController::class, 'getCurrentPlant']);
         Route::post('/subscribe-plan', [UserController::class, 'subscribePlan']);
+        Route::post('/suspension', [UserController::class, 'getSuspension']);
     });
     //User Vehicle
     Route::prefix('user-rating-comment')->group(function(){

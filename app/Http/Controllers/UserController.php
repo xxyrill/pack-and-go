@@ -15,6 +15,8 @@ use App\Models\UserDriverDetails;
 use App\Models\UserRating;
 use App\Models\UserRatingComment;
 use App\Models\UserSubscription;
+use App\Models\UserSuspension;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -332,11 +334,22 @@ class UserController extends Controller
         $validate = $request->validate([
             "service_user_id" => 'required|exists:users,id',
             "booking_id" => 'required|exists:bookings,id',
-            "rate" => 'required|integer',
-            "additional_comment" => 'required'
+            "rate" => 'required|integer'
         ]);
         $validate['customer_id'] = Auth::id();
+        $validate['additional_comment'] = $request->additional_comment;
         UserRating::create($validate);
+        $rating = UserRating::where('service_user_id', $validate['service_user_id']);
+        $sum = (int)$rating->sum('rate');
+        $count = $rating->count();
+        $average = ($count != 0 ) ? $sum / $count : 0;
+        if($count > 5 && $average <= 3.0){
+            UserSuspension::create([
+                "user_id" => $validate['service_user_id'],
+                "start_date" => Carbon::now()->toDateString(),
+                "end_date" => Carbon::now()->addDays(7)->toDateString()
+            ]);
+        }
         Booking::find($validate['booking_id'])->update(['rated' => true]);
         return response([
             'message' => 'Rate saved.'
@@ -521,5 +534,16 @@ class UserController extends Controller
                 'errors' => ['password' => 'Invalid Url.']
             ],400);
         }
+    }
+    public function getSuspension(Request $request)
+    {
+        $data = UserSuspension::where('user_id', Auth::id())
+                                ->whereDate('start_date', '<=', Carbon::now())
+                                ->whereDate('end_date', '>=', Carbon::now())
+                                ->first();
+        return response([
+            'suspended' => $data ? true : false,
+            'expiry'    => $data->end_date ?? null
+        ]);
     }
 }

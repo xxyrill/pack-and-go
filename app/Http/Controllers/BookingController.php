@@ -13,6 +13,7 @@ use App\Models\BookingReschedule;
 use App\Models\User;
 use App\Models\UserVehicles;
 use App\Models\UserRating;
+use App\Models\UserSuspension;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -45,12 +46,24 @@ class BookingController extends Controller
                 ]);
             }
         }
-        $data = Booking::when($user->userRole->role == 'driver', function($q) use($user, $search, $user_vehicles){
-                            $q->where(function($qu) use($user, $user_vehicles) {
+        $suspension = UserSuspension::where('user_id',Auth::id())
+                                      ->whereDate('start_date', '<=', Carbon::now())
+                                      ->whereDate('end_date', '>=', Carbon::now())
+                                      ->first();
+        $data = Booking::when($user->userRole->role == 'driver', function($q) use($user, $search, $user_vehicles, $suspension){
+                            $q->where(function($qu) use($user, $user_vehicles, $suspension) {
                                 $qu->whereIn('vehicle_list_id', $user_vehicles)
-                                   ->where(function($q)use($user){
-                                       $q->whereNull('user_driver_id')
-                                         ->orWhere('user_driver_id', $user->id);
+                                   ->when($suspension, function($q) use($user){
+                                        $q->where('user_driver_id', $user->id)
+                                          ->where(function($q){
+                                            $q->where('status', 'completed')
+                                              ->orWhere('status', 'cancelled');
+                                          });
+                                   }, function($q) use($user){
+                                        $q->where(function($q)use($user){
+                                            $q->whereNull('user_driver_id')
+                                            ->orWhere('user_driver_id', $user->id);
+                                        });
                                    });
                             })
                             ->when($search, function($q) use($search){
@@ -70,13 +83,21 @@ class BookingController extends Controller
                                 });
                             });
                         })
-                        ->when($user->userRole->role == 'business', function($q) use($user, $search, $user_vehicles){
-                            $q->where(function($qu) use($user, $user_vehicles) {
+                        ->when($user->userRole->role == 'business', function($q) use($user, $search, $user_vehicles, $suspension){
+                            $q->where(function($qu) use($user, $user_vehicles, $suspension) {
                                 $qu->whereIn('vehicle_list_id', $user_vehicles)
-                                   ->where(function($q)use($user){
-                                       $q->whereNull('user_driver_id')
-                                         ->orWhere('user_driver_id', $user->id);
-                                   });
+                                    ->when($suspension, function($q) use($user){
+                                        $q->where('user_driver_id', $user->id)
+                                          ->where(function($q){
+                                            $q->where('status', 'completed')
+                                              ->orWhere('status', 'cancelled');
+                                          });
+                                }, function($q) use($user){
+                                        $q->where(function($q)use($user){
+                                            $q->whereNull('user_driver_id')
+                                            ->orWhere('user_driver_id', $user->id);
+                                        });
+                                });
                             })
                             ->when($search, function($q) use($search){
                                 $q->where(function($q) use($search){

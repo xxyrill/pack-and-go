@@ -75,4 +75,7 @@ class User extends Authenticatable
     public function userVehicles() {
         return $this->hasMany(UserVehicles::class, 'user_id', 'id');
     }
+    public function userSuspension() {
+        return $this->hasOne(UserSuspension::class, 'user_id', 'id');
+    }
 }
