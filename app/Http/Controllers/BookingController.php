@@ -13,6 +13,7 @@ use App\Models\BookingReschedule;
 use App\Models\User;
 use App\Models\UserVehicles;
 use App\Models\UserRating;
+use App\Models\UserSuspension;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -30,14 +31,39 @@ class BookingController extends Controller
         $sort_by = ($request['sort_by'] != '' || $request['sort_by'] != null ) ? $request['sort_by'] : 'desc';
         $order_by = ($request['order_by'] != '' || $request['order_by'] != null ) ? $request['order_by'] : 'id';
         $sort_by = ($request['sort_by'] != '' || $request['sort_by'] != null ) ? $request['sort_by'] : 'desc';
-        $user = Auth::user()->load('userRole');
+        $user = Auth::user()->load('userRole', 'userSubscription');
         $user_vehicles = UserVehicles::where('user_id', $user->id)->pluck('vehicle_list_id')->toArray();
-        $data = Booking::when($user->userRole->role == 'driver', function($q) use($user, $search, $user_vehicles){
-                            $q->where(function($qu) use($user, $user_vehicles) {
+        if($user->userRole->role == 'driver' || $user->userRole->role == 'business'){
+            if(!$user->userSubscription){
+                return response([
+                    'data'      => [],
+                    'details'   => [
+                        'from' =>   1,
+                        'to'   =>   0,
+                        'total'=>   0
+                    ],
+                    'message'   => "No Results Found"
+                ]);
+            }
+        }
+        $suspension = UserSuspension::where('user_id',Auth::id())
+                                      ->whereDate('start_date', '<=', Carbon::now())
+                                      ->whereDate('end_date', '>=', Carbon::now())
+                                      ->first();
+        $data = Booking::when($user->userRole->role == 'driver', function($q) use($user, $search, $user_vehicles, $suspension){
+                            $q->where(function($qu) use($user, $user_vehicles, $suspension) {
                                 $qu->whereIn('vehicle_list_id', $user_vehicles)
-                                   ->where(function($q)use($user){
-                                       $q->whereNull('user_driver_id')
-                                         ->orWhere('user_driver_id', $user->id);
+                                   ->when($suspension, function($q) use($user){
+                                        $q->where('user_driver_id', $user->id)
+                                          ->where(function($q){
+                                            $q->where('status', 'completed')
+                                              ->orWhere('status', 'cancelled');
+                                          });
+                                   }, function($q) use($user){
+                                        $q->where(function($q)use($user){
+                                            $q->whereNull('user_driver_id')
+                                            ->orWhere('user_driver_id', $user->id);
+                                        });
                                    });
                             })
                             ->when($search, function($q) use($search){
@@ -57,13 +83,21 @@ class BookingController extends Controller
                                 });
                             });
                         })
-                        ->when($user->userRole->role == 'business', function($q) use($user, $search, $user_vehicles){
-                            $q->where(function($qu) use($user, $user_vehicles) {
+                        ->when($user->userRole->role == 'business', function($q) use($user, $search, $user_vehicles, $suspension){
+                            $q->where(function($qu) use($user, $user_vehicles, $suspension) {
                                 $qu->whereIn('vehicle_list_id', $user_vehicles)
-                                   ->where(function($q)use($user){
-                                       $q->whereNull('user_driver_id')
-                                         ->orWhere('user_driver_id', $user->id);
-                                   });
+                                    ->when($suspension, function($q) use($user){
+                                        $q->where('user_driver_id', $user->id)
+                                          ->where(function($q){
+                                            $q->where('status', 'completed')
+                                              ->orWhere('status', 'cancelled');
+                                          });
+                                }, function($q) use($user){
+                                        $q->where(function($q)use($user){
+                                            $q->whereNull('user_driver_id')
+                                            ->orWhere('user_driver_id', $user->id);
+                                        });
+                                });
                             })
                             ->when($search, function($q) use($search){
                                 $q->where(function($q) use($search){
@@ -252,5 +286,24 @@ class BookingController extends Controller
         return response([
             'message' => 'data saved.'
         ]);
+    }
+    public function getNotification(Request $request)
+    {
+        $data = Booking::where('user_id', Auth::id())
+                        ->take(5)
+                        ->orderBy('id', 'desc')
+                        ->get();
+        $result = false;
+        if(isset($data[0]) && isset($data[2]) && isset($data[2])){
+            if($data[0]->status == 'cancelled' && $data[1]->status == 'cancelled' && $data[2]->status == 'cancelled'){
+                $result = true;
+            }else{
+                $result = false;
+            }
+        }else{
+            $result = false;
+        }
+
+        return response(['status' => $result]);
     }
 }

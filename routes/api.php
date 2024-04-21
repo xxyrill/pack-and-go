@@ -5,6 +5,7 @@ use App\Http\Controllers\BookingController;
 use App\Http\Controllers\MailingController;
 use App\Http\Controllers\MessagingController;
 use App\Http\Controllers\OtpController;
+use App\Http\Controllers\PaymentMethodController;
 use App\Http\Controllers\SignController;
 use App\Http\Controllers\SMSController;
 use App\Http\Controllers\SubscriptionController;
@@ -30,6 +31,8 @@ Route::post('/verify-feilds', [UserController::class, 'verifyFields']);
 Route::post('/vehicle-dropdown', [VehicleListController::class, 'index']);
 Route::post('/send-otp', [SMSController::class, 'sendOtp']);
 Route::post('/verify', [SMSController::class, 'verifyOtp']);
+Route::post('/user/forgot-password', [UserController::class, 'forgotPasswordMail']);
+Route::post('/user/password/save', [UserController::class, 'changePassword']);
 
 Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::post('/send-mail', [MailingController::class, 'sendRescheduleBooking']);
@@ -38,6 +41,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     //User
     Route::prefix('user')->group(function(){
         Route::post('/get', [UserController::class, 'getUserData']);
+        Route::get('/show/{id}', [UserController::class, 'show']);
         Route::get('/subscription', [UserController::class, 'getUserSubscription']);
         Route::patch('/{id}', [UserController::class, 'update']);
         Route::post('/save-license-file', [UserController::class, 'saveDriverLicensePhoto']);
@@ -53,6 +57,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::post('/list', [UserController::class, 'blockList']);
         Route::get('/current-plan', [UserController::class, 'getCurrentPlant']);
         Route::post('/subscribe-plan', [UserController::class, 'subscribePlan']);
+        Route::post('/suspension', [UserController::class, 'getSuspension']);
     });
     //User Vehicle
     Route::prefix('user-rating-comment')->group(function(){
@@ -88,6 +93,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::post('/history', [BookingController::class, 'storeHistory']);
         Route::post('/canceled', [BookingController::class, 'storeCanceledBooking']);
         Route::post('/price', [BookingController::class, 'storeBookingPrice']);
+        Route::post('/notification', [BookingController::class, 'getNotification']);
     });
 
     //Chats
@@ -108,6 +114,12 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     //Dashboards 
     Route::prefix('dashboard')->group(function(){
         Route::post('/dash-cards', [AnalyticsController::class, 'dashboard']);
+        Route::post('/revenue', [AnalyticsController::class, 'getTotalRevenue']);
+    });
+
+    //Payment method
+    Route::prefix('payment-method')->group(function(){
+        Route::post('/pay', [PaymentMethodController::class, 'payCheckout']);
     });
     
     //Logout

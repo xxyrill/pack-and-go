@@ -66,4 +66,16 @@ class User extends Authenticatable
     public function userBlocked() {
         return $this->hasOne(UserBlock::class, 'user_id', 'id');
     }
+    public function userSubscription() {
+        return $this->hasOne(UserSubscription::class, 'user_id', 'id');
+    }
+    public function userBlockedReverse() {
+        return $this->hasOne(UserBlock::class, 'blocked_user_id', 'id');
+    }
+    public function userVehicles() {
+        return $this->hasMany(UserVehicles::class, 'user_id', 'id');
+    }
+    public function userSuspension() {
+        return $this->hasOne(UserSuspension::class, 'user_id', 'id');
+    }
 }

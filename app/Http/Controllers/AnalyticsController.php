@@ -39,14 +39,34 @@ class AnalyticsController extends Controller
                                         ->whereDate('created_at', '<=', $filter_date[1]);
                                     })
                                     ->count();
-
+        $revenue = Booking::when($filter_date, function($q) use($filter_date){
+                            $q->whereDate('created_at', '>=', $filter_date[0])
+                            ->whereDate('created_at', '<=', $filter_date[1]);
+                        })
+                        ->where('status', 'completed')
+                        ->sum('price');
         return response([
             'pending'   => $booking_pending,
             'completed' => $booking_complete,
             'cancelled' => $booking_cancelled,
             'customers' => $customers,
             'vehicles'  => $vehicles,
-            'revenue'   => 0
+            'revenue'   => $revenue
         ]);
+    }
+    public function getTotalRevenue(Request $request)
+    {
+        $year = ($request['year'] != '' || $request['year'] != null ) ? $request['year'] : null;
+        $monthlyData = [];
+        for ($month = 1; $month <= 12; $month++) {
+            $bookings = Booking::where('status', 'completed')
+                            ->whereMonth('created_at', $month)
+                            ->when($year, function($q) use($year){
+                                $q->whereYear('created_at', $year);
+                            })
+                            ->sum('price');
+            $monthlyData[$month] = $bookings;
+        }
+        return response(['data' => $monthlyData]);
     }
 }
