@@ -144,7 +144,7 @@ class BookingController extends Controller
                             $q->where('created_at', '>=', $date_range[0])
                               ->where('created_at', '<=', $date_range[1]);
                         })
-                        ->with('vehicleType', 'driver.userBusiness', 'customer', 'dates', 'bookingRequestPrice.driver.userBusiness')
+                        ->with('vehicleType', 'driver.userBusiness', 'customer', 'dates', 'bookingRequestPrice.driver.userBusiness', 'bookingItems')
                         ->with(['bookingHistory' => function($q) {
                             $q->orderBy('created_at', 'desc');
                         }]);
@@ -185,6 +185,7 @@ class BookingController extends Controller
         $data->dates()->create([
             'date' => $validate['booking_date_time_start']
         ]);
+        $data->bookingItems()->createMany($validate['booking_items']);
         $order_number = str_pad($data->id, 10, '0', STR_PAD_LEFT);
         $booking->find($data->id)->update(['order_number' => $order_number]);
         return response('Successfully secured your booking', 200);

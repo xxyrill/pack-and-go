@@ -57,4 +57,7 @@ class Booking extends Model
     public function bookingHistory() {
         return $this->hasMany(BookingHistory::class, 'booking_id', 'id');
     }
+    public function bookingItems() {
+        return $this->hasMany(BookingItems::class, 'booking_id', 'id');
+    }
 }

@@ -41,6 +41,7 @@ class StoreBookingRequest extends FormRequest
             'alt_contact_number_one' => 'required',
             'alt_contact_number_two' => 'nullable',
             'alt_email' => 'nullable',
+            'booking_items' => 'required|array'
         ];
     }
     public function messages() {
