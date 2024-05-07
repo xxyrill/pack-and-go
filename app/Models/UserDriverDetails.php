@@ -19,6 +19,7 @@ class UserDriverDetails extends Model
         'year_model',
         'plate_number',
         'helper',
-        'license_expiry_date'
+        'license_expiry_date',
+        'secondary_id_path'
     ];
 }

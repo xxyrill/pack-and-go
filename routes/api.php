@@ -33,6 +33,9 @@ Route::post('/send-otp', [SMSController::class, 'sendOtp']);
 Route::post('/verify', [SMSController::class, 'verifyOtp']);
 Route::post('/user/forgot-password', [UserController::class, 'forgotPasswordMail']);
 Route::post('/user/password/save', [UserController::class, 'changePassword']);
+Route::post('user/registration/save-license-file', [UserController::class, 'saveDriverLicensePhoto']);
+Route::post('user/registration/ids', [UserController::class, 'saveIds']);
+
 
 Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::post('/send-mail', [MailingController::class, 'sendRescheduleBooking']);
@@ -45,6 +48,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::get('/subscription', [UserController::class, 'getUserSubscription']);
         Route::patch('/{id}', [UserController::class, 'update']);
         Route::post('/save-license-file', [UserController::class, 'saveDriverLicensePhoto']);
+        Route::post('/ids', [UserController::class, 'saveDriverLicensePhoto']);
         Route::post('/update/email', [UserController::class, 'updateEmail']);
         Route::post('/update/contact-number', [UserController::class, 'updateContactNumber']);
         Route::post('/check/password', [UserController::class, 'checkAuthentication']);
@@ -73,6 +77,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::patch('/{id}', [UserVehiclesController::class, 'update']);
         Route::delete('/{id}', [UserVehiclesController::class, 'delete']);
         Route::post('/listing', [UserVehiclesController::class, 'vehicleUserLists']);
+        Route::post('/upload-documents', [UserVehiclesController::class, 'uploadDocuments']);
     });
 
     //Vehicle List
