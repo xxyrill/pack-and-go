@@ -59,8 +59,9 @@ class UserController extends Controller
         ];
         $user = User::create($user_payload);
         $user->userRole()->create(['role' => $user_payload['type']]);
+        $id = null;
         if($user_payload['type'] == 'business'){
-            $user->userBusiness()->create([
+            $id = $user->userBusiness()->create([
                 'business_name' => $userValidation['business_name'],
                 'business_address' => $userValidation['business_address'],
                 'business_complete_address' => $userValidation['business_complete_address'],
@@ -71,7 +72,7 @@ class UserController extends Controller
                 'business_contact_person' => $userValidation['business_contact_person'],
             ]);
         }elseif ($user_payload['type'] == 'driver') {
-            $user->userDriver()->create([
+            $id = $user->userDriver()->create([
                 'vehicle_list_id' => $userValidation['vehicle_list_id'],
                 'driver_license_number' => $userValidation['driver_license_number'],
                 'make' => $userValidation['make'],
@@ -81,6 +82,7 @@ class UserController extends Controller
             ]);
         }
         return response([
+            'id' => $id,
             'message' => 'Data inserted.'
         ], 200);
     }
@@ -226,6 +228,37 @@ class UserController extends Controller
         }else{
             $path = Storage::disk('public')->put('/license/back/'.$id.'', $validate['file']);
             $user_driver_details->find($validate['user_driver_details_id'])->update(['back_license_path' => $path]);
+            return response(['message' => 'Succesfully saved.']);
+        }
+    }
+    public function saveIds(Request $request)
+    {
+        $validate = $request->validate([
+            'type' => 'required|in:driver,business,dti,business_permit',
+            'file' => 'required|image',
+            'user_driver_details_id' => 'required_if:type,driver|exists:user_driver_details,id',
+            'user_business_details_id' => [
+                'required_if:type,business|exists:user_business_details,id',
+                'required_if:type,dti|exists:user_business_details,id',
+                'required_if:type,business_permit|exists:user_business_details,id'
+            ]
+        ]);
+        $id = Auth::id();
+        if($validate['type'] == 'driver'){
+            $path = Storage::disk('public')->put('/secondary/id/'.$id.'', $validate['file']);
+            UserDriverDetails::find($validate['user_driver_details_id'])->update(['secondary_id_path' => $path]);
+            return response(['message' => 'Succesfully saved.']);
+        }else if($validate['type'] == 'business'){
+            $path = Storage::disk('public')->put('/government/id/'.$id.'', $validate['file']);
+            UserBusinessDetails::find($validate['user_business_details_id'])->update(['government_id_path' => $path]);
+            return response(['message' => 'Succesfully saved.']);
+        }else if($validate['type'] == 'dti'){
+            $path = Storage::disk('public')->put('/dti-registration/id/'.$id.'', $validate['file']);
+            UserBusinessDetails::find($validate['user_business_details_id'])->update(['dti_registration_path' => $path]);
+            return response(['message' => 'Succesfully saved.']);
+        }else if($validate['type'] == 'business_permit'){
+            $path = Storage::disk('public')->put('/business-permit/id/'.$id.'', $validate['file']);
+            UserBusinessDetails::find($validate['user_business_details_id'])->update(['business_permit_path' => $path]);
             return response(['message' => 'Succesfully saved.']);
         }
     }

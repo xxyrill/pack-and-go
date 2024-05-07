@@ -6,6 +6,7 @@ use App\Models\UserSubscription;
 use App\Models\UserVehicles;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class UserVehiclesController extends Controller
 {
@@ -50,8 +51,9 @@ class UserVehiclesController extends Controller
                     'message' => 'Your subscription is for '.$subscription->subscription->vehicle_number.' vehicle only.'
                 ], 400);
             }else{
-                UserVehicles::create($validate);
+                $id = UserVehicles::create($validate);
                 return response([
+                    'id' => $id->id, 
                     'message' => 'The information regarding the vehicle has been successfully saved.'
                 ]);   
             }
@@ -130,5 +132,23 @@ class UserVehiclesController extends Controller
             'details'   => $details,
             'message'   => $message
         ]);
+    }
+    public function uploadDocuments(Request $request)
+    {
+        $validate = $request->validate([
+            'type' => 'required|in:or,cr',
+            'file' => 'required|image',
+            'user_vehicle_id' => 'required|exists:user_vehicles,id'
+        ]);
+        $id = Auth::id();
+        if($validate['type'] == 'or'){
+            $path = Storage::disk('public')->put('/vehicle-document/or/'.$id.'', $validate['file']);
+            UserVehicles::find($validate['user_vehicle_id'])->update(['or_path' => $path]);
+            return response(['message' => 'Succesfully saved.']);
+        }else{
+            $path = Storage::disk('public')->put('/vehicle-document/cr/'.$id.'', $validate['file']);
+            UserVehicles::find($validate['user_vehicle_id'])->update(['cr_path' => $path]);
+            return response(['message' => 'Succesfully saved.']);
+        }
     }
 }
