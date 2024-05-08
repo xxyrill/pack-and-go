@@ -36,7 +36,6 @@ Route::post('/user/password/save', [UserController::class, 'changePassword']);
 Route::post('user/registration/save-license-file', [UserController::class, 'saveDriverLicensePhoto']);
 Route::post('user/registration/ids', [UserController::class, 'saveIds']);
 
-
 Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::post('/send-mail', [MailingController::class, 'sendRescheduleBooking']);
     Route::post('/send-otp-mail', [MailingController::class, 'changeEmail']);
