@@ -20,6 +20,7 @@ class UserBusinessDetails extends Model
         'business_contact_person_number',
         'government_id_path',
         'dti_registration_path',
-        'business_permit_path'
+        'business_permit_path',
+        'business_dti_number'
     ];
 }

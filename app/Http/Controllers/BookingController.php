@@ -32,7 +32,7 @@ class BookingController extends Controller
         $order_by = ($request['order_by'] != '' || $request['order_by'] != null ) ? $request['order_by'] : 'id';
         $sort_by = ($request['sort_by'] != '' || $request['sort_by'] != null ) ? $request['sort_by'] : 'desc';
         $user = Auth::user()->load('userRole', 'userSubscription');
-        $user_vehicles = UserVehicles::where('user_id', $user->id)->pluck('vehicle_list_id')->toArray();
+        $user_vehicles = UserVehicles::where('user_id', $user->id)->where('status', 'active')->pluck('vehicle_list_id')->toArray();
         if($user->userRole->role == 'driver' || $user->userRole->role == 'business'){
             if(!$user->userSubscription){
                 return response([

@@ -39,6 +39,7 @@ class UserValidation extends FormRequest
             'business_permit_number' => 'nullable',
             'business_tourism_number' => 'nullable',
             'business_contact_person' => 'nullable',
+            'business_dti_number' => 'nullable',
 
             'vehicle_list_id' => 'required_if:type,driver|exists:vehicle_lists,id',
             'driver_license_number' => 'required_if:type,driver',

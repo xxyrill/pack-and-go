@@ -70,6 +70,7 @@ class UserController extends Controller
                 'business_permit_number' => $userValidation['business_permit_number'],
                 'business_tourism_number' => $userValidation['business_tourism_number'],
                 'business_contact_person' => $userValidation['business_contact_person'],
+                'business_dti_number' => $userValidation['business_dti_number']
             ]);
         }elseif ($user_payload['type'] == 'driver') {
             $id = $user->userDriver()->create([

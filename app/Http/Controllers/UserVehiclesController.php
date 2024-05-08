@@ -100,6 +100,21 @@ class UserVehiclesController extends Controller
             ], 400);
         }
     }
+    public function vehicleStatus($id, Request $request)
+    {
+        $vehicle = UserVehicles::find($id);
+        if($vehicle){
+            $request->validate(['status' => 'required|in:active,inactive']);
+            $vehicle->update(['status' => $request->status]);
+            return response([
+                'message' => ($request->status == 'active') ? 'You can now recieve a booking with this vehicle' : 'Vehicle is inactive, you cannot get any bookings for now.'
+            ], 200);
+        }else{
+            return response([
+                'message' => 'Invalid vehicle'
+            ], 400);
+        }
+    }
     public function vehicleUserLists(Request $request)
     {
         
@@ -127,7 +142,6 @@ class UserVehiclesController extends Controller
             'data'      => $data->skip($request->skip)
                                 ->take($request->take)
                                 ->orderBy('id','desc')
-                                ->withTrashed()
                                 ->get(),
             'details'   => $details,
             'message'   => $message

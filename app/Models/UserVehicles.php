@@ -17,7 +17,8 @@ class UserVehicles extends Model
         'plate_number',
         'type',
         'or_path',
-        'cr_path'
+        'cr_path',
+        'status'
     ];
     public function vehicle() {
         return $this->hasOne(VehicleList::class, 'id', 'vehicle_list_id');

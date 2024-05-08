@@ -77,6 +77,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::patch('/{id}', [UserVehiclesController::class, 'update']);
         Route::delete('/{id}', [UserVehiclesController::class, 'delete']);
         Route::post('/listing', [UserVehiclesController::class, 'vehicleUserLists']);
+        Route::patch('/status/{id}', [UserVehiclesController::class, 'vehicleStatus']);
         Route::post('/upload-documents', [UserVehiclesController::class, 'uploadDocuments']);
     });
 
@@ -120,11 +121,6 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::prefix('dashboard')->group(function(){
         Route::post('/dash-cards', [AnalyticsController::class, 'dashboard']);
         Route::post('/revenue', [AnalyticsController::class, 'getTotalRevenue']);
-    });
-
-    //Payment method
-    Route::prefix('payment-method')->group(function(){
-        Route::post('/pay', [PaymentMethodController::class, 'payCheckout']);
     });
     
     //Logout
