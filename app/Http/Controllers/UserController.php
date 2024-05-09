@@ -81,6 +81,12 @@ class UserController extends Controller
                 'plate_number' => $userValidation['plate_number'],
                 'helper' => $userValidation['helper']
             ]);
+            $user->userVehicles()->create([
+                'vehicle_list_id' => $userValidation['vehicle_list_id'],
+                'make' => $userValidation['make'],
+                'year_model' => $userValidation['year_model'],
+                'plate_number' => $userValidation['plate_number'],
+            ]);
         }
         return response([
             'id' => $id,
